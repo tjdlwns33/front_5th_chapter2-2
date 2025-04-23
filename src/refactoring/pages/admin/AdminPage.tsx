@@ -1,5 +1,5 @@
-import { AdminProductPage, ProductProps } from "./AdminProduct.tsx";
-import { AdminCouponPage, CouponProps } from "./AdminCoupon.tsx";
+import { AdminProductPage, ProductProps } from "./AdminProductPage.tsx";
+import { AdminCouponPage, CouponProps } from "./AdminCouponPage.tsx";
 
 export const AdminPage = ({
   products,
