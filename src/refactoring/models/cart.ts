@@ -1,5 +1,9 @@
 import { CartItem, Coupon } from "../../types";
 
+/** 
+ * 장바구니 상태 및 계산
+ * */ 
+
 export const calculateItemTotal = (item: CartItem) => {
   const discountRate = getMaxApplicableDiscount(item);
   return item.product.price * item.quantity * (1 - discountRate);

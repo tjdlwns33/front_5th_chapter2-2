@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Discount, Product } from "../../../types";
+import { useAccordion } from "../../hooks";
 
 export interface ProductProps {
   products: Product[];
@@ -12,7 +13,6 @@ export const AdminProductPage = ({
   onProductUpdate,
   onProductAdd,
 }: ProductProps) => {
-  const [openProductIds, setOpenProductIds] = useState<Set<string>>(new Set());
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
     name: "",
@@ -26,17 +26,7 @@ export const AdminProductPage = ({
     rate: 0,
   });
 
-  const toggleProductAccordion = (productId: string) => {
-    setOpenProductIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(productId)) {
-        newSet.delete(productId);
-      } else {
-        newSet.add(productId);
-      }
-      return newSet;
-    });
-  };
+  const { toggle, isOpen } = useAccordion();
 
   const handleAddNewProduct = () => {
     const productWithId = { ...newProduct, id: Date.now().toString() };
@@ -195,12 +185,12 @@ export const AdminProductPage = ({
           >
             <button
               data-testid="toggle-button"
-              onClick={() => toggleProductAccordion(product.id)}
+              onClick={() => toggle(product.id)}
               className="w-full text-left font-semibold"
             >
               {product.name} - {product.price}원 (재고: {product.stock})
             </button>
-            {openProductIds.has(product.id) && (
+            {isOpen(product.id) && (
               <div className="mt-2">
                 {editingProduct && editingProduct.id === product.id ? (
                   <div>
