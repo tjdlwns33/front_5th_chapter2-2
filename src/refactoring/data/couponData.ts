@@ -2,7 +2,7 @@ import { Coupon } from "../../types";
 
 export const initialCoupons: Coupon[] = [
   {
-    name: "5000원 할인 쿠폰",
+    name: "5,000원 할인 쿠폰",
     code: "AMOUNT5000",
     discountType: "amount",
     discountValue: 5000,

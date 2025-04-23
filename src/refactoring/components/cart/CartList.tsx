@@ -1,4 +1,5 @@
 import { CartItem } from "../../../types";
+import { formatCurrency } from "../../models/format";
 
 interface CartListProps {
   cart: CartItem[];
@@ -7,34 +8,46 @@ interface CartListProps {
   removeFromCart: (productId: string) => void;
 }
 
-export const CartList = ({cart, getAppliedDiscount, updateQuantity, removeFromCart}: CartListProps) => {
+export const CartList = ({
+  cart,
+  getAppliedDiscount,
+  updateQuantity,
+  removeFromCart,
+}: CartListProps) => {
   return (
     <div className="space-y-2">
-      {cart.map(item => {
+      {cart.map((item) => {
         const appliedDiscount = getAppliedDiscount(item);
         return (
-          <div key={item.product.id} className="flex justify-between items-center bg-white p-3 rounded shadow">
+          <div
+            key={item.product.id}
+            className="flex justify-between items-center bg-white p-3 rounded shadow"
+          >
             <div>
               <span className="font-semibold">{item.product.name}</span>
-              <br/>
+              <br />
               <span className="text-sm text-gray-600">
-            {item.product.price}원 x {item.quantity}
+                {formatCurrency(item.product.price)}원 x {item.quantity}
                 {appliedDiscount > 0 && (
                   <span className="text-green-600 ml-1">
-                ({(appliedDiscount * 100).toFixed(0)}% 할인 적용)
-              </span>
+                    ({(appliedDiscount * 100).toFixed(0)}% 할인 적용)
+                  </span>
                 )}
-          </span>
+              </span>
             </div>
             <div>
               <button
-                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                onClick={() =>
+                  updateQuantity(item.product.id, item.quantity - 1)
+                }
                 className="bg-gray-300 text-gray-800 px-2 py-1 rounded mr-1 hover:bg-gray-400"
               >
                 -
               </button>
               <button
-                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                onClick={() =>
+                  updateQuantity(item.product.id, item.quantity + 1)
+                }
                 className="bg-gray-300 text-gray-800 px-2 py-1 rounded mr-1 hover:bg-gray-400"
               >
                 +
@@ -50,5 +63,5 @@ export const CartList = ({cart, getAppliedDiscount, updateQuantity, removeFromCa
         );
       })}
     </div>
-  )
-}
+  );
+};

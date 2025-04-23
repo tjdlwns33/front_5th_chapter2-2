@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Discount, Product } from "../../../types";
 import { useAccordion } from "../../hooks";
+import { formatCurrency } from "../../models/format";
 
 export interface ProductProps {
   products: Product[];
@@ -188,7 +189,8 @@ export const AdminProductPage = ({
               onClick={() => toggle(product.id)}
               className="w-full text-left font-semibold"
             >
-              {product.name} - {product.price}원 (재고: {product.stock})
+              {product.name} - {formatCurrency(product.price)}원 (재고:{" "}
+              {product.stock})
             </button>
             {isOpen(product.id) && (
               <div className="mt-2">

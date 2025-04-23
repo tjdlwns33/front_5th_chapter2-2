@@ -39,17 +39,12 @@ export const useCart = () => {
     setSelectedCoupon(coupon);
   };
 
-  const calculateTotal = () => {
-    return calculateCartTotal(cart, selectedCoupon);
-  };
-
   return {
     cart,
     addToCart,
     removeFromCart,
     updateQuantity,
     applyCoupon,
-    calculateTotal,
     selectedCoupon,
   };
 };

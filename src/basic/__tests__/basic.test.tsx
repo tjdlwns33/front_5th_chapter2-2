@@ -13,6 +13,7 @@ import { AdminPage } from "../../refactoring/pages/admin/AdminPage";
 import { CartItem, Coupon, Product } from "../../types";
 import { useCart, useCoupons, useProducts } from "../../refactoring/hooks";
 import * as cartUtils from "../../refactoring/models/cart";
+import { useDiscountCalculation } from "../../refactoring/hooks/useDiscountCalculation";
 
 const mockProducts: Product[] = [
   {
@@ -186,7 +187,7 @@ describe("basic > ", () => {
       const $product4 = screen.getByTestId("product-4");
 
       expect($product4).toHaveTextContent("상품4");
-      expect($product4).toHaveTextContent("15000원");
+      expect($product4).toHaveTextContent("15,000원");
       expect($product4).toHaveTextContent("재고: 30");
 
       // 2. 상품 선택 및 수정
@@ -209,7 +210,7 @@ describe("basic > ", () => {
       fireEvent.click(within($product1).getByText("수정 완료"));
 
       expect($product1).toHaveTextContent("수정된 상품1");
-      expect($product1).toHaveTextContent("12000원");
+      expect($product1).toHaveTextContent("12,000원");
       expect($product1).toHaveTextContent("재고: 25");
 
       // 3. 상품 할인율 추가 및 삭제
@@ -501,18 +502,23 @@ describe("basic > ", () => {
     });
 
     test("합계를 정확하게 계산해야 합니다", () => {
-      const { result } = renderHook(() => useCart());
+      const { result: cartResult } = renderHook(() => useCart());
 
       act(() => {
-        result.current.addToCart(testProduct);
-        result.current.updateQuantity(testProduct.id, 2);
-        result.current.applyCoupon(testCoupon);
+        cartResult.current.addToCart(testProduct);
+        cartResult.current.updateQuantity(testProduct.id, 2);
+        cartResult.current.applyCoupon(testCoupon);
       });
 
-      const total = result.current.calculateTotal();
-      expect(total.totalBeforeDiscount).toBe(200);
-      expect(total.totalAfterDiscount).toBe(180);
-      expect(total.totalDiscount).toBe(20);
+      const { result: discountResult } = renderHook(() =>
+        useDiscountCalculation(
+          cartResult.current.cart,
+          cartResult.current.selectedCoupon
+        )
+      );
+      expect(discountResult.current.totalBeforeDiscount).toBe(200);
+      expect(discountResult.current.totalAfterDiscount).toBe(180);
+      expect(discountResult.current.totalDiscount).toBe(20);
     });
   });
 });

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Coupon } from "../../../types";
+import { formatCurrency } from "../../models/format";
 
 export interface CouponProps {
   coupons: Coupon[];
@@ -92,7 +93,7 @@ export const AdminCouponPage = ({ coupons, onCouponAdd }: CouponProps) => {
               >
                 {coupon.name} ({coupon.code}):
                 {coupon.discountType === "amount"
-                  ? `${coupon.discountValue}원`
+                  ? `${formatCurrency(coupon.discountValue)}원`
                   : `${coupon.discountValue}%`}{" "}
                 할인
               </div>

@@ -1,14 +1,16 @@
 import { CartItem, Coupon } from "../../types";
 
-/** 
+/**
  * 장바구니 상태 및 계산
- * */ 
+ * */
 
+// 각 장바구니 항목의 최종 가격을 계산
 export const calculateItemTotal = (item: CartItem) => {
   const discountRate = getMaxApplicableDiscount(item);
   return item.product.price * item.quantity * (1 - discountRate);
 };
 
+// 상품 수량에 따라 적용 가능한 최대 할인율 계산
 export const getMaxApplicableDiscount = (item: CartItem): number => {
   return item.product.discounts.reduce((maxDiscount, d) => {
     return item.quantity >= d.quantity && d.rate > maxDiscount
@@ -17,6 +19,7 @@ export const getMaxApplicableDiscount = (item: CartItem): number => {
   }, 0);
 };
 
+// 전체 장바구니의 총합 계산
 export const calculateCartTotal = (
   cart: CartItem[],
   selectedCoupon: Coupon | null
@@ -45,12 +48,13 @@ export const calculateCartTotal = (
   const totalDiscount = totalBeforeDiscount - totalAfterDiscount;
 
   return {
-    totalBeforeDiscount: Math.round(totalBeforeDiscount),
-    totalAfterDiscount: Math.round(totalAfterDiscount),
-    totalDiscount: Math.round(totalDiscount),
+    totalBeforeDiscount: totalBeforeDiscount,
+    totalAfterDiscount: totalAfterDiscount,
+    totalDiscount: totalDiscount,
   };
 };
 
+// 상품의 수량 수정
 export const updateCartItemQuantity = (
   cart: CartItem[],
   productId: string,
