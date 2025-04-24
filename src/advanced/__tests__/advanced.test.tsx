@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { describe, expect, test } from "vitest";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, within } from "@testing-library/react";
 import { CartPage } from "../../refactoring/pages/user/CartPage";
 import { AdminPage } from "../../refactoring/pages/admin/AdminPage";
 import { Coupon, Product } from "../../types";
+import { useAccordion } from "../../refactoring/hooks";
 
 const mockProducts: Product[] = [
   {
@@ -266,8 +267,56 @@ describe("advanced > ", () => {
       expect(true).toBe(false);
     });
 
-    test("새로운 hook 함수를 만든 후에 테스트 코드를 작성해서 실행해보세요", () => {
-      expect(true).toBe(false);
-    });
+    describe("useAccordion", () => {
+      test('초기에는 열린 ID가 없어야 한다', () => {
+        const {result} = renderHook(() => useAccordion());
+
+        expect(result.current.openIds.size).toBe(0);
+      });
+      
+      test('toggle을 호출하면 섹션이 열려야 한다', () => {
+        const {result} = renderHook(() => useAccordion());
+
+        act(() => {
+          result.current.toggle('p1');
+        })
+
+        expect(result.current.isOpen('p1')).toBe(true);
+        expect(result.current.openIds.has('p1')).toBe(true);
+      })
+
+      test('toggle을 다시 호출하면 섹션이 닫혀야 한다', () => {
+        const {result} = renderHook(() => useAccordion());
+
+        act(() => {
+          result.current.toggle('p1');
+        })
+        act(() => {
+          result.current.toggle('p1');
+        })
+
+        expect(result.current.isOpen('p1')).toBe(false);
+        expect(result.current.openIds.has('p1')).toBe(false);
+      })
+
+      test('여러 ID를 독립적으로 제어할 수 있어야 한다.', () => {
+        const {result} = renderHook(() => useAccordion());
+
+        act(() => {
+          result.current.toggle('p1');
+          result.current.toggle('p2');
+        })
+
+        expect(result.current.isOpen('p1')).toBe(true);
+        expect(result.current.isOpen('p1')).toBe(true);
+
+        act(() => {
+          result.current.toggle('p2');
+        })
+
+        expect(result.current.openIds.has('p1')).toBe(true);
+        expect(result.current.openIds.has('p2')).toBe(false);
+      })
+    })
   });
 });
