@@ -1,10 +1,20 @@
 import { useState } from "react";
-import { describe, expect, test } from "vitest";
-import { act, fireEvent, render, renderHook, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import * as cartModel from "../../refactoring/models/cart";
+import {
+  act,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  within,
+} from "@testing-library/react";
 import { CartPage } from "../../refactoring/pages/user/CartPage";
 import { AdminPage } from "../../refactoring/pages/admin/AdminPage";
-import { Coupon, Product } from "../../types";
+import { CartItem, Coupon, Product } from "../../types";
 import { useAccordion } from "../../refactoring/hooks";
+import { useDiscountCalculation } from "../../refactoring/hooks/useDiscountCalculation";
+import { formatCurrency } from "../../refactoring/models/format";
 
 const mockProducts: Product[] = [
   {
@@ -263,60 +273,145 @@ describe("advanced > ", () => {
   });
 
   describe("자유롭게 작성해보세요.", () => {
-    test("새로운 유틸 함수를 만든 후에 테스트 코드를 작성해서 실행해보세요", () => {
-      expect(true).toBe(false);
+    describe("formatCurrency", () => {
+      test("기본 로케일(ko-KR)로 숫자를 포맷한다", () => {
+        expect(formatCurrency(1000)).toBe("1,000");
+        expect(formatCurrency(123456789)).toBe("123,456,789");
+        expect(formatCurrency(0)).toBe("0");
+      });
+
+      test("다른 로케일(en-US)로 숫자를 포맷할 수 있다", () => {
+        expect(formatCurrency(1000, "en-US")).toBe("1,000");
+        expect(formatCurrency(1234567, "en-US")).toBe("1,234,567");
+      });
+
+      test("소수점 이하를 반올림하고 제거한다", () => {
+        expect(formatCurrency(1234.56)).toBe("1,235"); // 반올림됨
+        expect(formatCurrency(999.49)).toBe("999");
+      });
+
+      test("음수 값도 포맷한다", () => {
+        expect(formatCurrency(-10000)).toBe("-10,000");
+      });
     });
 
     describe("useAccordion", () => {
-      test('초기에는 열린 ID가 없어야 한다', () => {
-        const {result} = renderHook(() => useAccordion());
+      test("초기에는 열린 ID가 없어야 한다", () => {
+        const { result } = renderHook(() => useAccordion());
 
         expect(result.current.openIds.size).toBe(0);
       });
-      
-      test('toggle을 호출하면 섹션이 열려야 한다', () => {
-        const {result} = renderHook(() => useAccordion());
+
+      test("toggle을 호출하면 섹션이 열려야 한다", () => {
+        const { result } = renderHook(() => useAccordion());
 
         act(() => {
-          result.current.toggle('p1');
-        })
+          result.current.toggle("p1");
+        });
 
-        expect(result.current.isOpen('p1')).toBe(true);
-        expect(result.current.openIds.has('p1')).toBe(true);
-      })
+        expect(result.current.isOpen("p1")).toBe(true);
+        expect(result.current.openIds.has("p1")).toBe(true);
+      });
 
-      test('toggle을 다시 호출하면 섹션이 닫혀야 한다', () => {
-        const {result} = renderHook(() => useAccordion());
-
-        act(() => {
-          result.current.toggle('p1');
-        })
-        act(() => {
-          result.current.toggle('p1');
-        })
-
-        expect(result.current.isOpen('p1')).toBe(false);
-        expect(result.current.openIds.has('p1')).toBe(false);
-      })
-
-      test('여러 ID를 독립적으로 제어할 수 있어야 한다.', () => {
-        const {result} = renderHook(() => useAccordion());
+      test("toggle을 다시 호출하면 섹션이 닫혀야 한다", () => {
+        const { result } = renderHook(() => useAccordion());
 
         act(() => {
-          result.current.toggle('p1');
-          result.current.toggle('p2');
-        })
+          result.current.toggle("p1");
+        });
+        act(() => {
+          result.current.toggle("p1");
+        });
 
-        expect(result.current.isOpen('p1')).toBe(true);
-        expect(result.current.isOpen('p1')).toBe(true);
+        expect(result.current.isOpen("p1")).toBe(false);
+        expect(result.current.openIds.has("p1")).toBe(false);
+      });
+
+      test("여러 ID를 독립적으로 제어할 수 있어야 한다.", () => {
+        const { result } = renderHook(() => useAccordion());
 
         act(() => {
-          result.current.toggle('p2');
-        })
+          result.current.toggle("p1");
+          result.current.toggle("p2");
+        });
 
-        expect(result.current.openIds.has('p1')).toBe(true);
-        expect(result.current.openIds.has('p2')).toBe(false);
-      })
-    })
+        expect(result.current.isOpen("p1")).toBe(true);
+        expect(result.current.isOpen("p1")).toBe(true);
+
+        act(() => {
+          result.current.toggle("p2");
+        });
+
+        expect(result.current.openIds.has("p1")).toBe(true);
+        expect(result.current.openIds.has("p2")).toBe(false);
+      });
+    });
+
+    describe("useDiscountCalculation", () => {
+      const mockCart: CartItem[] = [
+        {
+          product: {
+            id: "p1",
+            name: "상품1",
+            price: 10000,
+            stock: 20,
+            discounts: [{ quantity: 10, rate: 0.1 }],
+          },
+          quantity: 5,
+        },
+      ];
+
+      const mockCoupon: Coupon = {
+        name: "10% 할인 쿠폰",
+        code: "PERCENT10",
+        discountType: "percentage",
+        discountValue: 10,
+      };
+
+      const spy = vi.spyOn(cartModel, "calculateCartTotal");
+
+      afterEach(() => {
+        spy.mockReset();
+      });
+
+      test("장바구니와 쿠폰으로 calculateCartTotal을 호출한다", () => {
+        spy.mockReturnValue({
+          totalBeforeDiscount: 50000,
+          totalAfterDiscount: 45000,
+          totalDiscount: 5000,
+        });
+
+        const { result } = renderHook(() =>
+          useDiscountCalculation(mockCart, mockCoupon)
+        );
+
+        expect(spy).toHaveBeenCalledWith(mockCart, mockCoupon);
+        expect(result.current).toEqual({
+          totalBeforeDiscount: 50000,
+          totalAfterDiscount: 45000,
+          totalDiscount: 5000,
+        });
+      });
+
+      test("의존성이 변경되지 않으면 calculateCartTotal을 재호출하지 않는다", () => {
+        spy.mockReturnValue({
+          totalBeforeDiscount: 50000,
+          totalAfterDiscount: 45000,
+          totalDiscount: 5000,
+        });
+
+        const { result, rerender } = renderHook(
+          ({ cart, coupon }) => useDiscountCalculation(cart, coupon),
+          {
+            initialProps: { cart: mockCart, coupon: mockCoupon },
+          }
+        );
+
+        expect(spy).toHaveBeenCalledTimes(1);
+        rerender({ cart: mockCart, coupon: mockCoupon });
+        expect(spy).toHaveBeenCalledTimes(1); // 동일한 props로 재렌더링해도 다시 호출되지 않음
+        expect(result.current.totalAfterDiscount).toBe(45000);
+      });
+    });
   });
 });
