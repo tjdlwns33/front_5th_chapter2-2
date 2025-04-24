@@ -9,7 +9,7 @@ export default mergeConfig(
     build: {
       rollupOptions: {
         input: {
-          main: "./index.refactoring.html", // 사용하고자 하는 HTML 파일로 경로 지정
+          main: "./index.html", // 사용하고자 하는 HTML 파일로 경로 지정
         },
       },
     },
